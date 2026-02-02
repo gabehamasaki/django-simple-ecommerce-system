@@ -24,7 +24,11 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
 
-    'rest_framework'
+    'rest_framework',
+
+    'inventory',
+    'customers',
+    'orders'
 ]
 
 MIDDLEWARE = [
