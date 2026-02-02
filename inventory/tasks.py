@@ -12,7 +12,7 @@ def reserve_stock(order_id):
             items = order.orders_items.all().select_related('product')
 
             for item in items:
-                product = item.product
+                product = Product.objects.select_for_update().get(id=item.product.id)
                 if product.stock_quantity >= item.quantity:
                     product.stock_quantity -= item.quantity
                     product.save()
@@ -36,7 +36,7 @@ def release_expired_reservations():
 
     with transaction.atomic():
         for reservation in expired_reservations:
-            product = reservation.product
+            product = Product.objects.select_for_update().get(id=reservation.product.id)
             product.stock_quantity += reservation.reserved_quantity
             product.save()
             reservation.delete()
@@ -56,13 +56,13 @@ def payment_confirmation_reservation_release(order_id):
                         product=item.product,
                         reserved_quantity=item.quantity,
                         expires_at__gt=timezone.now()
-                    ).first()
+                    ).select_for_update().first()
                     if reservation:
                         reservation.delete()
                 return f"Released reservations for paid order {order_id}"
             elif order.payment_status in ['unpaid', 'refunded']:
                 for item in items:
-                    product = item.product
+                    product = Product.objects.select_for_update().get(id=item.product.id) # Trava o produto
                     product.stock_quantity += item.quantity
                     product.save()
                 return f"Estoque devolvido para pedido {order.payment_status}: {order_id}"
