@@ -1,0 +1,181 @@
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    container_name: postgres
+    hostname: postgres-server
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: moDcmNKQEi8qfyLGPpX25NMk99AnNP
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    command:
+      - "postgres"
+      - "-c"
+      - "listen_addresses=*"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=1536MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "work_mem=5MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+  rabbitmq:
+    image: rabbitmq:4.1.4-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq-server
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq_user
+      RABBITMQ_DEFAULT_PASS: MqRP2BLvRztjrIOPWAfyoys81gIsLr
+      RABBITMQ_DEFAULT_VHOST: default
+      RABBITMQ_ERLANG_COOKIE: Dgg1chbQRJ3GURTvVvvaIgpyxIw5F1
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: >-
+        -rabbit loopback_users []
+        -rabbit tcp_listeners [{"0.0.0.0",5672}]
+      RABBITMQ_DISK_FREE_LIMIT: 1GB
+      RABBITMQ_PLUGINS: rabbitmq_management
+      RABBITMQ_LOGS: "-"
+      RABBITMQ_LOG_LEVEL: info
+      RABBITMQ_HEARTBEAT: 60
+      RABBITMQ_HANDSHAKE_TIMEOUT: 10000
+      RABBITMQ_MAX_MESSAGE_SIZE: 134217728
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-logs:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:8.2.2-alpine3.22
+    container_name: redis
+    hostname: redis-server
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: pubeAD1XcaGgsOD
+      REDIS_REPLICATION_MODE: master
+      TZ: America/Sao_Paulo
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - redis-logs:/var/log/redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    command: >
+      redis-server
+      --appendonly yes
+      --port 6379
+      --requirepass pubeAD1XcaGgsOD
+      --maxmemory 384mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --daemonize no
+      --loglevel notice
+      --databases 16
+      --slowlog-log-slower-than 10000
+      --slowlog-max-len 128
+      --latency-monitor-threshold 100
+      --notify-keyspace-events ""
+      --hash-max-ziplist-entries 512
+      --hash-max-ziplist-value 64
+      --list-max-ziplist-size -2
+      --set-max-intset-entries 512
+      --zset-max-ziplist-entries 128
+      --zset-max-ziplist-value 64
+      --hll-sparse-max-bytes 3000
+      --stream-node-max-bytes 4096
+      --stream-node-max-entries 100
+      --activerehashing yes
+      --client-output-buffer-limit normal 0 0 0
+      --client-output-buffer-limit replica 256mb 64mb 60
+      --client-output-buffer-limit pubsub 32mb 8mb 60
+      --hz 10
+      --dynamic-hz yes
+      --aof-rewrite-incremental-fsync yes
+      --rdb-save-incremental-fsync yes
+
+
+volumes:
+  pg-data:
+    driver: local
+    name: postgres_data
+  rabbitmq-data:
+    driver: local
+    name: rabbitmq_data
+  rabbitmq-logs:
+    driver: local
+    name: rabbitmq_logs
+  redis-data:
+    driver: local
+    name: redis_data
+  redis-logs:
+    driver: local
+    name: redis_logs
+
+networks:
+  default:
+    driver: bridge
