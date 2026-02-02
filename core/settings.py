@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
 
+    'drf_spectacular',
     'rest_framework',
 
     'seeder',
@@ -45,9 +46,18 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'core.urls'
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Django Simple E-commerce API',
+    'DESCRIPTION': 'Documentação da API de E-commerce com Arquitetura de Eventos',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 TEMPLATES = [

@@ -6,37 +6,6 @@ from celery import shared_task
 from .models import OrderItem, Order
 from core.celery import celery
 
-
-@shared_task(name="orders.tasks.create_order")
-def create_order(customer_id, address_id, items):
-    try:
-        with transaction.atomic():
-            order = Order.objects.create(
-                customer_id=customer_id,
-                address_id=address_id,
-                total_amount=0
-            )
-
-            total_amount = 0
-            for item in items:
-                product_id = item['product_id']
-                quantity = item['quantity']
-                price = item['price']
-
-                OrderItem.objects.create(
-                    order=order,
-                    product_id=product_id,
-                    quantity=quantity,
-                    price=price
-                )
-                total_amount += price * quantity
-
-            order.total_amount = total_amount
-            order.save()
-            return f"Order {order.id} created successfully"
-    except Exception as e:
-        return str(e)
-
 @shared_task(name="orders.tasks.process_payment")
 def process_payment(order_id):
     try:

@@ -1,17 +1,22 @@
-from rest_framework import viewsets, response, status
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from core.celery import celery
 from .models import Order
 from .serializers import OrderSerializer
-from .tasks import create_order
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
     def create(self, request, *args, **kwargs):
-        # Dispatch to Celery task for order creation
-        customer_id = request.data.get('customer')
-        address_id = request.data.get('address')
-        items = request.data.get('items', [])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        task = create_order.delay(customer_id, address_id, items)
-        return response.Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+        # Salva o pedido no PostgreSQL
+        order = serializer.save()
+
+        # Dispara o evento para o RabbitMQ
+        celery.send_task("inventory.tasks.reserve_stock", args=[str(order.id)])
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
