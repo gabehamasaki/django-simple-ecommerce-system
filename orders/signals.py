@@ -8,3 +8,4 @@ def order_created(sender, instance, created, **kwargs):
     if created:
         # Dispara a tarefa de reserva de estoque
         celery.send_task('inventory.tasks.reserve_stock', args=[str(instance.id)])
+        celery.send_task('orders.tasks.update_total_amount', args=[str(instance.id)])

@@ -6,6 +6,19 @@ from celery import shared_task
 from .models import OrderItem, Order
 from core.celery import celery
 
+@shared_task(name="orders.tasks.update_total_amount")
+def update_total_amount(order_id):
+    try:
+        with transaction.atomic():
+            order = Order.objects.get(id=order_id)
+            items = order.orders_items.all()
+            total_amount = sum(item.product.price * item.quantity for item in items)
+            order.total_amount = total_amount
+            order.save()
+        return f"Total amount updated for order {order_id}"
+    except Exception as e:
+        return str(e)
+
 @shared_task(name="orders.tasks.process_payment")
 def process_payment(order_id):
     try:
