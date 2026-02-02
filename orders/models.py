@@ -7,8 +7,9 @@ from customers.models import Customer, Address
 class Order(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     order_number = models.CharField(max_length=20, unique=True)
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    address_snapshot = models.TextField(blank=True, help_text="Snapshot of the address at the time of order")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     transport_status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
