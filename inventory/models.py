@@ -41,3 +41,13 @@ class Category(models.Model):
         if self.parent:
             return f"{self.parent.get_full_path()} > {self.name}"
         return self.name
+
+class ReservedProduct(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reservations')
+    reserved_quantity = models.PositiveIntegerField()
+    reserved_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"Reservation of {self.reserved_quantity} for {self.product.name}"
