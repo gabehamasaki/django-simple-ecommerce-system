@@ -26,6 +26,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
+    'seeder',
     'inventory',
     'customers',
     'orders'

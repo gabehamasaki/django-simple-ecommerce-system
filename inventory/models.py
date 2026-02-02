@@ -18,8 +18,26 @@ class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='subcategories'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = "Categories"
+
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
+        return self.name
+
+    def get_full_path(self):
+        """Retorna o caminho completo da categoria"""
+        if self.parent:
+            return f"{self.parent.get_full_path()} > {self.name}"
         return self.name
