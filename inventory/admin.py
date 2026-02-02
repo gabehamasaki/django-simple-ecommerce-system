@@ -11,4 +11,4 @@ class ProductAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent', 'created_at', 'updated_at')
     search_fields = ('name', 'description')
-    list_filter = ('created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at', 'parent')
