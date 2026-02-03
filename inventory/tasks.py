@@ -61,11 +61,18 @@ def payment_confirmation_reservation_release(order_id):
                     if reservation:
                         reservation.delete()
                 return f"Released reservations for paid order {order_id}"
-            elif order.payment_status in ['unpaid', 'refunded']:
+            elif order.payment_status in ['unpaid', 'refunded', 'canceled', 'failed']:
                 for item in items:
                     product = Product.objects.select_for_update().get(id=item.product.id) # Trava o produto
                     product.stock_quantity += item.quantity
                     product.save()
+                    reservation = ReservedProduct.objects.filter(
+                        product=item.product,
+                        reserved_quantity=item.quantity,
+                        expires_at__gt=timezone.now()
+                    ).select_for_update().first()
+                    if reservation:
+                        reservation.delete()
                 return f"Estoque devolvido para pedido {order.payment_status}: {order_id}"
             return f"Nenhuma ação necessária para o status: {order.payment_status}"
     except Exception as e:
