@@ -28,16 +28,13 @@ def process_payment(order_id):
                 return f"Order {order_id} payment already processed"
 
             # Simula o processamento do pagamento
-            payment_successful = random.choice([True, False])
+            payment_status = random.choice(['paid', 'unpaid', 'failed', 'canceled', 'refunded'])
+            order.payment_status = payment_status
 
-            if payment_successful:
-                order.payment_status = 'paid'
+            if payment_status == 'paid':
                 order.paid_at = timezone.now()
-                order.save()
-            else:
-                order.payment_status = 'unpaid'
-                order.save()
-                return f"Payment failed for order {order_id}"
+
+            order.save()
 
             celery.send_task("inventory.tasks.payment_confirmation_reservation_release", args=[order_id])
             return f"Payment processed successfully for order {order_id}"

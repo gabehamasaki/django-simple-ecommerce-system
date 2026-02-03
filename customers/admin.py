@@ -36,4 +36,16 @@ class CustomerAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     list_display = ('customer', 'street', 'city', 'state', 'postal_code', 'country', 'created_at', 'updated_at')
     search_fields = ('street', 'city', 'state', 'postal_code', 'country')
-    list_filter = ('country', 'created_at', 'updated_at')
+    list_filter = ('country', 'created_at', 'updated_at', 'customer')
+
+
+class CustomerInline(admin.StackedInline):
+    model = Customer
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

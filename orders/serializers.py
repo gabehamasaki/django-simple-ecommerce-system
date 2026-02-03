@@ -1,14 +1,31 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
+from inventory.models import Product
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source='product',
+        write_only=True
+    )
+
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price', 'created_at', 'updated_at']
+        fields = ['product_id', 'quantity', 'price']
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
+    items = OrderItemSerializer(many=True, source='orders_items')
 
     class Meta:
         model = Order
-        fields = ['id', 'customer', 'address', 'created_at', 'updated_at', 'items']
+        fields = ['customer', 'address', 'items']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('orders_items')
+
+        order = Order.objects.create(**validated_data)
+
+        for item_data in items_data:
+            OrderItem.objects.create(order=order, **item_data)
+
+        return order

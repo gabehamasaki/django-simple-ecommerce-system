@@ -44,10 +44,11 @@ class Category(models.Model):
 
 class ReservedProduct(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    order = models.ForeignKey('orders.Order', null=True, on_delete=models.CASCADE, related_name='reserved_products')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reservations')
     reserved_quantity = models.PositiveIntegerField()
     reserved_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 
     def __str__(self):
-        return f"Reservation of {self.reserved_quantity} for {self.product.name}"
+        return f"Reservation of {self.reserved_quantity} for {self.product.name} in order {self.order_id}"

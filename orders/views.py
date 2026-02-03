@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from core.celery import celery
 from .models import Order
 from .serializers import OrderSerializer
+from .utils import generate_order_number
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -16,6 +17,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = serializer.save()
 
         # Salva o snapshot do endereço
+        order.order_number = generate_order_number()
         order.address_snapshot = str(order.address)
         order.save()
 
